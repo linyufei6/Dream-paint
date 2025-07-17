@@ -175,7 +175,10 @@ function getPos(e) {
 }
 
 canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('touchstart', startDraw);
+canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    startDraw(e);
+}, { passive: false });
 canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('touchmove', function(e) {
     e.preventDefault();
@@ -183,7 +186,10 @@ canvas.addEventListener('touchmove', function(e) {
 }, { passive: false });
 canvas.addEventListener('mouseup', endDraw);
 canvas.addEventListener('mouseleave', endDraw);
-canvas.addEventListener('touchend', endDraw);
+canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    endDraw(e);
+}, { passive: false });
 
 clearBtn.addEventListener('click', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -7,12 +7,7 @@ const canvas = document.getElementById('drawingCanvas');
 if (canvas) {
     canvas.addEventListener('mousedown', function() {
         console.log('mousedown on canvas');
-        paintSound.currentTime = 0;
-        paintSound.play().then(() => {
-            console.log('音效播放成功');
-        }).catch(e => {
-            console.error('音效播放失败:', e);
-        });
+        safePlaySound(paintSound);
     });
 } else {
     console.error('canvas not found');
@@ -75,13 +70,10 @@ const brushes = [
     }
 ];
 
-// 音效资源
-const soundDraw = new Audio('sound/draw.mp3');
-const soundSelect = new Audio('sound/select.mp3');
-const soundEraser = new Audio('sound/eraser.mp3');
-soundDraw.volume = 0.25;
-soundSelect.volume = 0.4;
-soundEraser.volume = 0.3;
+// 用 cartoon-pop.mp3 替换所有音效
+const soundDraw = paintSound;
+const soundSelect = paintSound;
+const soundEraser = paintSound;
 
 function renderBrushBar() {
     brushBar.innerHTML = '';
@@ -96,11 +88,7 @@ function renderBrushBar() {
             currentBrushSize = brush.size;
             document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            if (brush.key === 'eraser') {
-                soundEraser.currentTime = 0; soundEraser.play();
-            } else {
-                soundSelect.currentTime = 0; soundSelect.play();
-            }
+            safePlaySound(paintSound);
         };
         brushBar.appendChild(btn);
     });
@@ -128,7 +116,7 @@ function renderColorBar() {
                 currentBrushSize = brushes[0].size;
                 renderBrushBar();
             }
-            soundSelect.currentTime = 0; soundSelect.play();
+            safePlaySound(paintSound);
         };
         colorBar.appendChild(btn);
     });
@@ -167,8 +155,7 @@ function draw(e) {
     [lastX, lastY] = [x, y];
     // 播放画画音效
     if (drawing) {
-        soundDraw.currentTime = 0;
-        soundDraw.play();
+        safePlaySound(paintSound);
     }
 }
 
@@ -188,12 +175,21 @@ function getPos(e) {
 }
 
 canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('touchstart', startDraw);
+canvas.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    startDraw(e);
+}, { passive: false });
 canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('touchmove', draw);
+canvas.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    draw(e);
+}, { passive: false });
 canvas.addEventListener('mouseup', endDraw);
 canvas.addEventListener('mouseleave', endDraw);
-canvas.addEventListener('touchend', endDraw);
+canvas.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    endDraw(e);
+}, { passive: false });
 
 clearBtn.addEventListener('click', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -212,4 +208,23 @@ if (beginBtn) {
     beginBtn.onclick = function() {
         cover.style.display = 'none';
     };
+}
+
+function safePlaySound(audio) {
+    try {
+        audio.currentTime = 0;
+        audio.play().catch(e => {
+            // 移动端首次交互前不能自动播放音频，忽略即可
+        });
+    } catch (e) {
+        // 忽略
+    }
+}
+
+// 移动端首次交互解锁音频
+if (typeof window !== 'undefined') {
+    document.body.addEventListener('touchstart', function unlockAudio() {
+        paintSound.play().catch(()=>{});
+        document.body.removeEventListener('touchstart', unlockAudio);
+    }, {passive: true});
 } 

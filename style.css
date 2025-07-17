@@ -1,3 +1,13 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.main-layout {
+    height: 100vh;
+    overflow: hidden;
+}
 .cute-header {
     display: inline-flex;
     align-items: center;
@@ -127,6 +137,7 @@ button, .color-btn, .brush-btn {
     align-items: center;
 }
 #drawingCanvas {
+    touch-action: none;
     background: #fff;
     border: 4px dashed #bfae9e;
     border-radius: 18px;
